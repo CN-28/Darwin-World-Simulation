@@ -1,25 +1,53 @@
 package agh.ics.oop;
 
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Random;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.util.*;
 
 import static agh.ics.oop.MapDirection.*;
 
-public class Animal {
+public class Animal implements IMapElement {
     private Vector2d position;
     private MapDirection orientation;
-    private Genes genes;
-    protected int energy;
+    protected final Genes genes;
+    private int energy;
     private final IWorldMap map;
     private final static List<MapDirection> orientationsList = Arrays.asList(NORTH, SOUTH, WEST, EAST, NORTH_EAST, NORTH_WEST, SOUTH_EAST, SOUTH_WEST);
     private final LinkedHashSet<IPositionChangeObserver> observers = new LinkedHashSet<>();
+    private static int moveEnergy;
+    private static int startEnergy;
+    private final ArrayList<ImageView> imageViews = new ArrayList<>();
 
-    public Animal(IWorldMap map, Vector2d position, int energy) {
+    public Animal(IWorldMap map, Vector2d position) {
         this.map = map;
-        this.energy = energy;
+        this.energy = startEnergy;
         this.position = position;
+        this.genes = new Genes();
+        Random rand = new Random();
+        this.orientation = orientationsList.get(rand.nextInt(orientationsList.size()));
+
+        try {
+            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/up.png"))));
+            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/up_right.png"))));
+            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/right.png"))));
+            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/down_right.png"))));
+            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/down.png"))));
+            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/down_left.png"))));
+            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/left.png"))));
+            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/up_left.png"))));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Animal(IWorldMap map, Animal parent1, Animal parent2) {
+        this.map = map;
+        this.energy = (int) (((double) parent1.getEnergy()) / 4) + (int) (((double) parent2.getEnergy()) / 4);
+        this.position = parent1.position;
+        this.genes = new Genes(parent1, parent2);
         Random rand = new Random();
         this.orientation = orientationsList.get(rand.nextInt(orientationsList.size()));
     }
@@ -58,11 +86,55 @@ public class Animal {
             case BACKWARD -> newPos = this.position.subtract(this.orientation.toUnitVector());
         }
 
-        if (this.map.canMoveTo(newPos)){
+        if (!(this.position.equals(newPos)) && this.map.canMoveTo(newPos)){
             this.positionChanged(this.position, newPos, this);
             this.position = newPos;
         }
+    }
 
+    public boolean isDead(){
+        return this.energy < moveEnergy;
+    }
+
+    public static void setMoveEnergy(int moveEnergyValue){
+        moveEnergy = moveEnergyValue;
+    }
+
+    public static void setStartEnergy(int startEnergyValue){
+        startEnergy = startEnergyValue;
+    }
+
+    public static int getStartEnergy(){
+        return startEnergy;
+    }
+
+    public static int getMoveEnergy() {
+        return moveEnergy;
+    }
+
+    public void decreaseEnergy(int energyValue){
+        this.energy -= energyValue;
+    }
+
+    public void increaseEnergy(int increaseNumber){
+        this.energy += increaseNumber;
+    }
+
+    public int getEnergy(){
+        return this.energy;
+    }
+
+    public ImageView getPicture(){
+        return switch(this.orientation) {
+            case NORTH -> imageViews.get(0);
+            case NORTH_EAST -> imageViews.get(1);
+            case EAST -> imageViews.get(2);
+            case SOUTH_EAST -> imageViews.get(3);
+            case SOUTH -> imageViews.get(4);
+            case SOUTH_WEST -> imageViews.get(5);
+            case WEST -> imageViews.get(6);
+            case NORTH_WEST -> imageViews.get(7);
+        };
     }
 
     public String toString(){
