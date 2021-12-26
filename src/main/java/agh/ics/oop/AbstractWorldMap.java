@@ -10,6 +10,7 @@ public abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObse
     protected final MapVisualizer mapVisualization;
     public final HashMap <Vector2d, TreeSet<Animal>> animals = new HashMap<>();
     public final HashMap <Vector2d, Plant> plants = new HashMap<>();
+    public boolean running = false;
 
     protected static int width, height;
     protected static int numberOfAnimalsAtStart;
@@ -19,12 +20,12 @@ public abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObse
     protected static ArrayList<Vector2d> steppeRandomPlants = new ArrayList<>();
     protected static ArrayList<Vector2d> jungleRandomPlants = new ArrayList<>();
     protected static ArrayList<Vector2d> drawnAnimals = new ArrayList<>();
+    protected static ArrayList<Vector2d> positionsToDrawFrom = new ArrayList<>();
 
     public AbstractWorldMap(){
         this.lowerLeft = new Vector2d(0, 0);
         this.upperRight = new Vector2d(width - 1, height - 1);
         this.mapVisualization = new MapVisualizer(this, jungleLowerLeft, jungleUpperRight);
-        this.placePlants();
     }
 
     public static void setInitialValues(){
@@ -36,7 +37,6 @@ public abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObse
 
         // preparing arrays for functionality of placing plants randomly
         Vector2d tempVector;
-        ArrayList<Vector2d> positionsToDrawFrom = new ArrayList<>();
         for (int i = 0; i < width * height; i++){
             tempVector = new Vector2d(i / width, i % width);
             positionsToDrawFrom.add(tempVector);
@@ -79,7 +79,7 @@ public abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObse
 
         if (this.animals.get(newPosition) == null) {
             this.animals.put(newPosition, new TreeSet<>((a1, a2) -> {
-                if (a1 == a2)
+                if (a1.getEnergy() == a2.getEnergy() && a1 == a2)
                     return 0;
                 else if (a1.getEnergy() < a2.getEnergy())
                     return 1;
@@ -101,7 +101,7 @@ public abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObse
             throw new IllegalArgumentException("The position " + animalPos + " is invalid");
 
         this.animals.put(animalPos, new TreeSet<>((a1, a2) -> {
-            if (a1 == a2)
+            if (a1.getEnergy() == a2.getEnergy() && a1 == a2)
                 return 0;
             else if (a1.getEnergy() < a2.getEnergy())
                 return 1;
@@ -115,9 +115,21 @@ public abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObse
 
 
     public Animal reproduceAnimals(Animal parent1, Animal parent2){
-        Animal animal = new Animal(this, parent1, parent2);
+        Animal animal;
+        if (parent1.getEnergy() >= parent2.getEnergy())
+            animal = new Animal(this, parent1, parent2);
+        else
+            animal = new Animal(this, parent2, parent1);
+
+        this.animals.get(parent1.getPosition()).remove(parent1);
         parent1.decreaseEnergy((int) (((double) parent1.getEnergy()) / 4));
+        this.animals.get(parent1.getPosition()).add(parent1);
+
+        this.animals.get(parent2.getPosition()).remove(parent2);
         parent2.decreaseEnergy((int) (((double) parent2.getEnergy()) / 4));
+        this.animals.get(parent2.getPosition()).add(parent2);
+
+        animal.addObserver(this);
         this.animals.get(animal.getPosition()).add(animal);
         return animal;
     }

@@ -1,5 +1,5 @@
 package agh.ics.oop;
 
 public interface IAnimalMoveObserver {
-    void animalMoved();
+    void animalMoved(AbstractWorldMap map);
 }

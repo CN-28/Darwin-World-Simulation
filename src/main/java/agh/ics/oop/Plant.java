@@ -22,7 +22,7 @@ public class Plant implements IMapElement {
     }
 
     public ImageView getPicture() {
-        return imageView;
+        return this.imageView;
     }
 
     public Vector2d getPosition(){

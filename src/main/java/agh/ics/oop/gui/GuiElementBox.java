@@ -9,21 +9,21 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.*;
 
-
 public class GuiElementBox {
     public VBox vBox;
     public Label boxLabel;
 
     public GuiElementBox(IMapElement mapElement) {
         ImageView imageView = mapElement.getPicture();
-        imageView.setFitWidth(20);
-        imageView.setFitHeight(20);
+        imageView.setFitWidth(16);
+        imageView.setFitHeight(16);
         vBox = new VBox();
         if (mapElement instanceof Animal)
-            boxLabel = new Label(mapElement.getPosition().toString());
+            boxLabel = new Label(((Animal) mapElement).getEnergy() + "");
         else
             boxLabel = new Label("Plant");
 
+        boxLabel.setStyle("-fx-font-size: 11;");
         vBox.getChildren().addAll(imageView, boxLabel);
         vBox.setAlignment(Pos.CENTER);
     }

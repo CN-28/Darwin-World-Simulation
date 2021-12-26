@@ -12,38 +12,51 @@ import static agh.ics.oop.MapDirection.*;
 public class Animal implements IMapElement {
     private Vector2d position;
     private MapDirection orientation;
-    protected final Genes genes;
+    protected Genes genes;
     private int energy;
     private final IWorldMap map;
     private final static List<MapDirection> orientationsList = Arrays.asList(NORTH, SOUTH, WEST, EAST, NORTH_EAST, NORTH_WEST, SOUTH_EAST, SOUTH_WEST);
     private final LinkedHashSet<IPositionChangeObserver> observers = new LinkedHashSet<>();
     private static int moveEnergy;
     private static int startEnergy;
-    private final ArrayList<ImageView> imageViews = new ArrayList<>();
+    private final ImageView[] imageViews = new ImageView [8];
 
     public Animal(IWorldMap map, Vector2d position) {
+        try {
+            imageViews[0] = new ImageView(new Image(new FileInputStream("src/main/resources/up.png")));
+            imageViews[1] = new ImageView(new Image(new FileInputStream("src/main/resources/up_right.png")));
+            imageViews[2] = new ImageView(new Image(new FileInputStream("src/main/resources/right.png")));
+            imageViews[3] = new ImageView(new Image(new FileInputStream("src/main/resources/down_right.png")));
+            imageViews[4] = new ImageView(new Image(new FileInputStream("src/main/resources/down.png")));
+            imageViews[5] = new ImageView(new Image(new FileInputStream("src/main/resources/down_left.png")));
+            imageViews[6] = new ImageView(new Image(new FileInputStream("src/main/resources/left.png")));
+            imageViews[7] = new ImageView(new Image(new FileInputStream("src/main/resources/up_left.png")));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
         this.map = map;
         this.energy = startEnergy;
         this.position = position;
         this.genes = new Genes();
         Random rand = new Random();
         this.orientation = orientationsList.get(rand.nextInt(orientationsList.size()));
-
-        try {
-            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/up.png"))));
-            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/up_right.png"))));
-            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/right.png"))));
-            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/down_right.png"))));
-            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/down.png"))));
-            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/down_left.png"))));
-            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/left.png"))));
-            imageViews.add(new ImageView(new Image(new FileInputStream("src/main/resources/up_left.png"))));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
     }
 
     public Animal(IWorldMap map, Animal parent1, Animal parent2) {
+        try {
+            imageViews[0] = new ImageView(new Image(new FileInputStream("src/main/resources/up.png")));
+            imageViews[1] = new ImageView(new Image(new FileInputStream("src/main/resources/up_right.png")));
+            imageViews[2] = new ImageView(new Image(new FileInputStream("src/main/resources/right.png")));
+            imageViews[3] = new ImageView(new Image(new FileInputStream("src/main/resources/down_right.png")));
+            imageViews[4] = new ImageView(new Image(new FileInputStream("src/main/resources/down.png")));
+            imageViews[5] = new ImageView(new Image(new FileInputStream("src/main/resources/down_left.png")));
+            imageViews[6] = new ImageView(new Image(new FileInputStream("src/main/resources/left.png")));
+            imageViews[7] = new ImageView(new Image(new FileInputStream("src/main/resources/up_left.png")));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
         this.map = map;
         this.energy = (int) (((double) parent1.getEnergy()) / 4) + (int) (((double) parent2.getEnergy()) / 4);
         this.position = parent1.position;
@@ -92,6 +105,12 @@ public class Animal implements IMapElement {
         }
     }
 
+    public Animal copyAnimal(AbstractWorldMap map, Vector2d position) {
+        Animal animal = new Animal(map, position);
+        animal.genes = this.genes;
+        return animal;
+    }
+
     public boolean isDead(){
         return this.energy < moveEnergy;
     }
@@ -126,14 +145,14 @@ public class Animal implements IMapElement {
 
     public ImageView getPicture(){
         return switch(this.orientation) {
-            case NORTH -> imageViews.get(0);
-            case NORTH_EAST -> imageViews.get(1);
-            case EAST -> imageViews.get(2);
-            case SOUTH_EAST -> imageViews.get(3);
-            case SOUTH -> imageViews.get(4);
-            case SOUTH_WEST -> imageViews.get(5);
-            case WEST -> imageViews.get(6);
-            case NORTH_WEST -> imageViews.get(7);
+            case NORTH -> imageViews[0];
+            case NORTH_EAST -> imageViews[1];
+            case EAST -> imageViews[2];
+            case SOUTH_EAST -> imageViews[3];
+            case SOUTH -> imageViews[4];
+            case SOUTH_WEST -> imageViews[5];
+            case WEST -> imageViews[6];
+            case NORTH_WEST -> imageViews[7];
         };
     }
 
