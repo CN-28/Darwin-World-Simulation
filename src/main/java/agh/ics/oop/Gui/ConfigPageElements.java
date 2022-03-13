@@ -21,14 +21,14 @@ public class ConfigPageElements {
     protected HBox hBox;
 
     public ConfigPageElements(App app){
-        this.mapWidthBox = new InputConfigBox(5, 25, 14, "Map width");
-        this.mapHeightBox = new InputConfigBox(5, 25, 14, "Map height");
+        this.mapWidthBox = new InputConfigBox(5, 50, 14, "Map width");
+        this.mapHeightBox = new InputConfigBox(5, 50, 14, "Map height");
         this.animalsAtStartBox = new InputConfigBox(1, 100, 10, "Number of animals at start");
         this.startEnergyBox = new InputConfigBox(1, 200, 50, "Animal starting energy");
         this.moveEnergyBox = new InputConfigBox(1, 200, 1, "Animal moving energy");
         this.plantEnergyBox = new InputConfigBox(1, 200, 20, "Plant energy value");
         this.jungleRatioBox = new InputConfigBox(0.1, 0.8, 0.6, "Jungle ratio");
-        this.moveDelayBox = new InputConfigBox(17, 1000, 30, "Move delay");
+        this.moveDelayBox = new InputConfigBox(5, 1000, 30, "Move delay");
         ToggleGroup group1 = new ToggleGroup();
         this.magical1 = new RadioButton("Magical");
         RadioButton standard1 = new RadioButton("Standard");
@@ -106,8 +106,8 @@ public class ConfigPageElements {
             this.hBox.getChildren().clear();
             this.hBox.getChildren().addAll(setUpBox, gridsBox);
             this.hBox.setSpacing(30);
-            app.updateGui(app.map2, app.map2.guiElements.grid);
-            app.updateGui(app.map1, app.map1.guiElements.grid);
+            app.renderMapsAtStart(app.map2, app.map2.guiElements.gridNodes);
+            app.renderMapsAtStart(app.map1, app.map1.guiElements.gridNodes);
 
             app.thread1.start();
             app.thread2.start();

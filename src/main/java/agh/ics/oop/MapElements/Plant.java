@@ -1,5 +1,8 @@
 package agh.ics.oop.MapElements;
 
+import agh.ics.oop.Gui.App;
+import agh.ics.oop.Gui.GuiElementBox;
+import agh.ics.oop.Maps.AbstractWorldMap;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
@@ -12,6 +15,7 @@ public class Plant implements IMapElement {
     private final ImageView imageView;
     private static final int size = 20;
     private static Image image;
+    public GuiElementBox box;
 
     static {
         try {
@@ -21,9 +25,10 @@ public class Plant implements IMapElement {
         }
     }
 
-    public Plant (Vector2d plantPosition){
+    public Plant (Vector2d plantPosition, AbstractWorldMap map){
         this.position = plantPosition;
         this.imageView = new ImageView(image);
+        this.box = new GuiElementBox(this, map, App.width);
     }
 
     public ImageView getPicture() {

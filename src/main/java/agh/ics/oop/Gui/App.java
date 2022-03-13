@@ -16,7 +16,7 @@ public class App extends Application implements IGuiUpdateObserver {
     protected SimulationEngine engine1, engine2;
     protected Thread thread1, thread2;
     private Scene scene;
-    protected static int width;
+    public static int width;
     protected static int height;
 
 
@@ -31,14 +31,7 @@ public class App extends Application implements IGuiUpdateObserver {
         primaryStage.show();
     }
 
-    public void markDominant(AbstractWorldMap map, GridPane grid){
-        grid.getChildren().clear();
-
-        for (int i = 0; i <= map.upperRight.x; i++){
-            for (int j = 0; j <= map.upperRight.y; j++)
-                fillCell(i, j, grid, map);
-        }
-
+    public void markDominant(AbstractWorldMap map){
         for (Vector2d animalPos : map.animals.keySet()){
             Animal animalOnMap = map.animals.get(animalPos).first();
             for (Animal animal : map.animals.get(animalPos)){
@@ -49,6 +42,7 @@ public class App extends Application implements IGuiUpdateObserver {
                 genotypeStr = genotypeResBuilder.toString();
 
                 if (map.dominantGenotype.equals(genotypeStr)){
+                    map.guiElements.gridNodes[map.upperRight.y - animalPos.y][animalPos.x].getChildren().clear();
                     Pane cell = new Pane();
                     cell.setPrefSize(width, height);
                     cell.setMaxSize(width, height);
@@ -63,41 +57,34 @@ public class App extends Application implements IGuiUpdateObserver {
                     else
                         cell.setStyle("-fx-background-color: black, blue; -fx-background-insets: 0, 0 0 1 1;");
 
-                    grid.add(cell, animalPos.x, map.upperRight.y - animalPos.y);
+                    map.guiElements.gridNodes[map.upperRight.y - animalPos.y][animalPos.x].getChildren().add(cell);
+                    map.guiElements.gridNodes[map.upperRight.y - animalPos.y][animalPos.x].getChildren().add(animalOnMap.box.vBox);
                 }
             }
-            grid.add(new GuiElementBox(animalOnMap, map, width).vBox, animalPos.x, map.upperRight.y - animalPos.y);
-        }
-
-        // add grass labels
-        for (Vector2d plantPos : map.plants.keySet()){
-            Plant plant = map.plants.get(plantPos);
-            if (map.objectAt(plantPos) instanceof Plant)
-                grid.add(new GuiElementBox(plant, map, width).vBox, plantPos.x, map.upperRight.y - plantPos.y);
         }
     }
 
-    public void updateGui(AbstractWorldMap map, GridPane grid){
-        Platform.runLater(() -> {
-            grid.getChildren().clear();
-
-            for (int i = 0; i <= map.upperRight.x; i++){
-                for (int j = 0; j <= map.upperRight.y; j++)
-                    fillCell(i, j, grid, map);
-            }
-        });
-
+    public void renderMapsAtStart(AbstractWorldMap map, StackPane[][] gridNodes){
         // add animals labels
         for (Vector2d animalPos : map.animals.keySet()){
-            Animal animal = map.animals.get(animalPos).first();
-            Platform.runLater(() -> grid.add(new GuiElementBox(animal, map, width).vBox, animalPos.x, map.upperRight.y - animalPos.y));
+            Platform.runLater(() ->{
+                Animal animal = map.animals.get(animalPos).first();
+                Vector2d pos = new Vector2d(animalPos.x, map.upperRight.y - animalPos.y);
+                map.guiElements.boxNodes.put(pos, animal.box.vBox);
+                gridNodes[map.upperRight.y - animalPos.y][animalPos.x].getChildren().add(animal.box.vBox);
+            });
         }
 
         // add grass labels
         for (Vector2d plantPos : map.plants.keySet()){
-            Plant plant = map.plants.get(plantPos);
-            if (map.objectAt(plantPos) instanceof Plant)
-                Platform.runLater(() -> grid.add(new GuiElementBox(plant, map, width).vBox, plantPos.x, map.upperRight.y - plantPos.y));
+            Platform.runLater(() -> {
+                Plant plant = map.plants.get(plantPos);
+                if (map.objectAt(plantPos) instanceof Plant){
+                    Vector2d pos = new Vector2d(plantPos.x, map.upperRight.y - plantPos.y);
+                    map.guiElements.boxNodes.put(pos, plant.box.vBox);
+                    gridNodes[map.upperRight.y - plantPos.y][plantPos.x].getChildren().add(plant.box.vBox);
+                }
+            });
         }
     }
 
@@ -122,29 +109,4 @@ public class App extends Application implements IGuiUpdateObserver {
         });
     }
 
-    public void fillCell(int i, int j, GridPane grid, AbstractWorldMap map) {
-        Pane cell = new Pane();
-        cell.setPrefSize(width, height);
-        cell.setMaxSize(width, height);
-        cell.setMinSize(width, height);
-        Vector2d pos = new Vector2d(i, j);
-        if (pos.precedes(AbstractWorldMap.jungleUpperRight) && pos.follows(AbstractWorldMap.jungleLowerLeft))
-            cell.setStyle("-fx-background-color: black, green; -fx-background-insets: 0, 0 0 1 1;");
-        else{
-            if (map.upperRight.y - j == 0 && i == map.upperRight.x)
-                cell.setStyle("-fx-background-color: black, lightgreen; -fx-background-insets: 0, 1 1 1 1;");
-            else if (map.upperRight.y - j == 0)
-                cell.setStyle("-fx-background-color: black, lightgreen; -fx-background-insets: 0, 1 0 1 1;");
-            else if (i == map.upperRight.x)
-                cell.setStyle("-fx-background-color: black, lightgreen; -fx-background-insets: 0, 0 1 1 1;");
-            else
-                cell.setStyle("-fx-background-color: black, lightgreen; -fx-background-insets: 0, 0 0 1 1;");
-        }
-
-        grid.add(cell, i, map.upperRight.y - j);
-    }
-
-    public void updateNeeded(AbstractWorldMap map) {
-        updateGui(map, map.guiElements.grid);
-    }
 }

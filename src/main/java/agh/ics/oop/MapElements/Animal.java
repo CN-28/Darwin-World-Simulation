@@ -1,5 +1,7 @@
 package agh.ics.oop.MapElements;
 
+import agh.ics.oop.Gui.App;
+import agh.ics.oop.Gui.GuiElementBox;
 import agh.ics.oop.Maps.AbstractWorldMap;
 import agh.ics.oop.Maps.IWorldMap;
 import javafx.scene.image.Image;
@@ -26,6 +28,7 @@ public class Animal implements IMapElement {
     public int numberOfChildren = 0;
     public boolean isDescendant = false;
     public static int size = 30;
+    public GuiElementBox box;
     private static final Image[] images = new Image[12];
 
     static {
@@ -47,7 +50,7 @@ public class Animal implements IMapElement {
         }
     }
 
-    public Animal(IWorldMap map, Vector2d position, int birthDay) {
+    public Animal(AbstractWorldMap map, Vector2d position, int birthDay) {
         this.birthDay = birthDay;
         for (int i = 0; i < 12; i++)
             imageViews[i] = new ImageView(images[i]);
@@ -58,9 +61,10 @@ public class Animal implements IMapElement {
         this.genes = new Genes();
         Random rand = new Random();
         this.orientation = orientationsList.get(rand.nextInt(orientationsList.size()));
+        this.box = new GuiElementBox(this, map, App.width);
     }
 
-    public Animal(IWorldMap map, Animal parent1, Animal parent2, int birthDay) {
+    public Animal(AbstractWorldMap map, Animal parent1, Animal parent2, int birthDay) {
         this.birthDay = birthDay;
         for (int i = 0; i < 12; i++)
             imageViews[i] = new ImageView(images[i]);
@@ -71,6 +75,7 @@ public class Animal implements IMapElement {
         this.genes = new Genes(parent1, parent2);
         Random rand = new Random();
         this.orientation = orientationsList.get(rand.nextInt(orientationsList.size()));
+        this.box = new GuiElementBox(this, map, App.width);
     }
 
     public Vector2d getPosition() {

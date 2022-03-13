@@ -6,6 +6,8 @@ import agh.ics.oop.MapElements.Plant;
 import agh.ics.oop.MapElements.Vector2d;
 import agh.ics.oop.Gui.CSVWriter;
 import agh.ics.oop.Gui.MapGuiElements;
+import javafx.application.Platform;
+
 import java.util.*;
 
 import static java.lang.Math.sqrt;
@@ -76,20 +78,26 @@ public abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObse
 
     public void placePlants(){
         // place one plant in the jungle
-        Collections.shuffle(jungleRandomPlants);
-        for (Vector2d position : jungleRandomPlants){
-            if (!isOccupied(position)){
-                plants.put(position, new Plant(position));
-                this.numberOfPlants++;
-                break;
-            }
-        }
+        placePlant(jungleRandomPlants);
 
         // place one plant on the steppe
-        Collections.shuffle(steppeRandomPlants);
-        for (Vector2d position : steppeRandomPlants){
+        placePlant(steppeRandomPlants);
+    }
+
+    private void placePlant(ArrayList<Vector2d> terrain){
+        Collections.shuffle(terrain);
+        for (Vector2d position : terrain){
             if (!isOccupied(position)){
-                plants.put(position, new Plant(position));
+                Plant plant = new Plant(position, this);
+                plants.put(position, plant);
+                if (!guiElements.boxNodes.containsKey(position)){
+                    Platform.runLater(() -> {
+                        guiElements.gridNodes[upperRight.y - position.y][position.x].getChildren().clear();
+                        guiElements.fillCell(position.x, position.y);
+                        guiElements.gridNodes[upperRight.y - position.y][position.x].getChildren().add(plant.box.vBox);
+                    });
+                    guiElements.boxNodes.put(position, plant.box.vBox);
+                }
                 this.numberOfPlants++;
                 break;
             }
@@ -173,12 +181,34 @@ public abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObse
 
         Vector2d animalPos = animal.getPosition();
         this.animals.get(animalPos).remove(animal);
+        if (this.animals.get(animalPos).size() == 0)
+            this.animals.remove(animalPos);
+
+
+        Vector2d pos = new Vector2d(animalPos.x, upperRight.y - animalPos.y);
+        Platform.runLater(() -> {
+            if (animal.box.vBox.equals(guiElements.boxNodes.get(pos))){
+                // remove dead animal
+                guiElements.gridNodes[pos.y][pos.x].getChildren().clear();
+                guiElements.fillCell(animalPos.x, animalPos.y);
+                guiElements.boxNodes.remove(pos);
+
+                // if plant or animal there render it
+                if (animals.containsKey(animalPos) && animals.get(animalPos).size() > 0){
+                    guiElements.gridNodes[pos.y][pos.x].getChildren().add(animals.get(animalPos).first().box.vBox);
+                    guiElements.boxNodes.put(pos, animals.get(animalPos).first().box.vBox);
+                }
+                else if (plants.containsKey(animalPos)){
+                    guiElements.gridNodes[pos.y][pos.x].getChildren().add(plants.get(animalPos).box.vBox);
+                    guiElements.boxNodes.put(pos, plants.get(animalPos).box.vBox);
+                }
+            }
+        });
+
         animal.removeObserver(this);
         this.numberOfAnimals--;
         this.tempSumLifeSpan += epoch - animal.birthDay;
         this.numberOfDeadAnimals++;
-        if (this.animals.get(animalPos).size() == 0)
-            this.animals.remove(animalPos);
     }
 
     public Object objectAt(Vector2d position) {

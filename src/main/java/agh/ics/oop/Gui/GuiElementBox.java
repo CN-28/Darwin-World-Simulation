@@ -10,19 +10,22 @@ import javafx.scene.layout.VBox;
 
 public class GuiElementBox {
     public VBox vBox;
-
+    public IMapElement mapElement;
+    public ImageView imageView, energyView;
+    int size;
     public GuiElementBox(IMapElement mapElement, AbstractWorldMap map, int size) {
-        ImageView imageView = mapElement.getPicture();
-        imageView.setFitWidth((double) 16/36 * (double) size);
-        imageView.setFitHeight((double) 16/36 * (double) size);
+        this.size = size;
+        this.mapElement = mapElement;
+        this.imageView = mapElement.getPicture();
+        this.imageView.setFitWidth((double) 16/36 * (double) size);
+        this.imageView.setFitHeight((double) 16/36 * (double) size);
         vBox = new VBox();
         vBox.setSpacing(1 * ((double) size / 36));
         if (mapElement instanceof Animal animal){
-            ImageView energyView = animal.getEnergyPicture(animal.getEnergy());
-            energyView.setFitHeight((double) 16/(36 * 3) * (double) size);
-            energyView.setFitWidth((double) 24/36 * (double) size);
+            this.energyView = animal.getEnergyPicture(animal.getEnergy());
+            this.energyView.setFitHeight((double) 16/(36 * 3) * (double) size);
+            this.energyView.setFitWidth((double) 24/36 * (double) size);
             vBox.setOnMouseClicked(e -> {
-
                 String genotypeStr = "";
                 StringBuilder genotypeResBuilder = new StringBuilder(genotypeStr);
                 for (int num : animal.genes.genotype)
@@ -50,5 +53,18 @@ public class GuiElementBox {
             vBox.getChildren().add(imageView);
 
         vBox.setAlignment(Pos.CENTER);
+    }
+
+    public void updateBox(){
+        vBox.getChildren().removeAll(this.imageView, this.energyView);
+        this.imageView = this.mapElement.getPicture();
+        this.imageView.setFitWidth((double) 16/36 * (double) size);
+        this.imageView.setFitHeight((double) 16/36 * (double) size);
+        if (this.energyView != null && mapElement instanceof Animal animal){
+            this.energyView = animal.getEnergyPicture(animal.getEnergy());
+            this.energyView.setFitHeight((double) 16 / (36 * 3) * (double) size);
+            this.energyView.setFitWidth((double) 24 / 36 * (double) size);
+        }
+        vBox.getChildren().addAll(imageView, energyView);
     }
 }
