@@ -6,6 +6,7 @@ import agh.ics.oop.MapElements.Plant;
 import agh.ics.oop.Maps.AbstractWorldMap;
 import agh.ics.oop.MapElements.MoveDirection;
 import agh.ics.oop.MapElements.Vector2d;
+import agh.ics.oop.Maps.UnboundedMap;
 import javafx.application.Platform;
 
 import java.util.*;
@@ -42,7 +43,7 @@ public class SimulationEngine implements IEngine, Runnable {
             animalsEatPlants();
             reproduceAnimals();
             map.placePlants();
-            handleMagicalMode();
+            if (this.animals.size() == 5) handleMagicalMode();
             updateStats();
 
             if (this.animals.size() == 0){
@@ -160,13 +161,19 @@ public class SimulationEngine implements IEngine, Runnable {
         this.map.tempSumAverageEnergy = 0;
         this.map.tempSumChildrenAverage = 0;
         this.dominantGenotypes.clear();
-
+        boolean temp = false;
+        ArrayList<Animal> toAdd = null;
         for (Iterator<Animal> iterator = this.animals.iterator(); iterator.hasNext(); ) {
             Animal animal = iterator.next();
 
             if (animal.isDead()) {
+                if (this.animals.size() == 6){
+                    temp = true;
+                    toAdd = handleMagicalModeAfterDeath();
+                }
                 iterator.remove();
-                this.map.removeDeadAnimal(animal, epoch);
+                this.map.removeDeadAnimal(animal, epoch, temp, toAdd);
+                temp = false;
             }
             else{
                 String genotypeStr = "";
@@ -187,6 +194,13 @@ public class SimulationEngine implements IEngine, Runnable {
                 this.map.tempSumChildrenAverage += animal.numberOfChildren;
             }
         }
+        if (toAdd != null){
+            for (Animal newAnimal : toAdd){
+                this.map.place(newAnimal);
+                this.animals.add(newAnimal);
+            }
+        }
+
 
         if (this.map.numberOfDeadAnimals != 0)
             this.map.averageLifeSpan = (double) (this.map.tempSumLifeSpan) / this.map.numberOfDeadAnimals;
@@ -258,11 +272,40 @@ public class SimulationEngine implements IEngine, Runnable {
         }
     }
 
+    private ArrayList<Animal> handleMagicalModeAfterDeath(){
+        if (magical && magicalCounter < 3) {
+            if (this.map instanceof UnboundedMap)
+                System.out.println("MAGIC HAPPENED - LEFT MAP");
+            else
+                System.out.println("MAGIC HAPPENED - RIGHT MAP");
+            Collections.shuffle(AbstractWorldMap.positionsToDrawFrom);
+            int cnt = 0;
+            ArrayList<Animal> toAdd = new ArrayList<>();
+            Iterator<Animal> iterator = this.animals.iterator();
+            for (Vector2d position : AbstractWorldMap.positionsToDrawFrom) {
+                if (!this.map.isOccupied(position)) {
+                    Animal animal = iterator.next();
+                    Animal newAnimal = animal.copyAnimal(this.map, position);
+                    toAdd.add(newAnimal);
+                    cnt++;
+                }
+                if (cnt == 5)
+                    break;
+            }
+
+            magicalCounter++;
+            return toAdd;
+        }
+        return null;
+    }
 
     private void handleMagicalMode(){
         // handling magical mode
-        if (magical && magicalCounter < 3 && this.animals.size() == 5) {
-            System.out.println("MAGIC");
+        if (magical && magicalCounter < 3) {
+            if (this.map instanceof UnboundedMap)
+                System.out.println("MAGIC HAPPENED - LEFT MAP");
+            else
+                System.out.println("MAGIC HAPPENED - RIGHT MAP");
             Collections.shuffle(AbstractWorldMap.positionsToDrawFrom);
             int cnt = 0;
             ArrayList<Animal> toAdd = new ArrayList<>();
@@ -274,13 +317,26 @@ public class SimulationEngine implements IEngine, Runnable {
                     this.map.place(newAnimal);
                     toAdd.add(newAnimal);
                     cnt++;
+                    Platform.runLater(() -> {
+                        map.guiElements.gridNodes[map.upperRight.y - newAnimal.getPosition().y][newAnimal.getPosition().x].getChildren().clear();
+                        map.guiElements.fillCell(newAnimal.getPosition().x, newAnimal.getPosition().y);
+                        map.guiElements.gridNodes[map.upperRight.y - newAnimal.getPosition().y][newAnimal.getPosition().x].getChildren().add(newAnimal.box.vBox);
+                        map.guiElements.boxNodes.put(new Vector2d(newAnimal.getPosition().x, map.upperRight.y - newAnimal.getPosition().y), newAnimal.box.vBox);
+                    });
+
                 }
                 if (cnt == 5)
                     break;
             }
             this.animals.addAll(toAdd);
-
             magicalCounter++;
+
+            // let user see that magic happened
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 

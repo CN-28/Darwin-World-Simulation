@@ -175,7 +175,7 @@ public abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObse
         return animal;
     }
 
-    public void removeDeadAnimal(Animal animal, int epoch){
+    public void removeDeadAnimal(Animal animal, int epoch, boolean updateMagical, ArrayList<Animal> toAdd){
         if (animal == this.trackedAnimal)
             this.trackedAnimalDeath = epoch;
 
@@ -201,6 +201,15 @@ public abstract class AbstractWorldMap implements IWorldMap, IPositionChangeObse
                 else if (plants.containsKey(animalPos)){
                     guiElements.gridNodes[pos.y][pos.x].getChildren().add(plants.get(animalPos).box.vBox);
                     guiElements.boxNodes.put(pos, plants.get(animalPos).box.vBox);
+                }
+            }
+
+            if (updateMagical && toAdd != null) {
+                for (Animal newAnimal : toAdd){
+                    guiElements.gridNodes[upperRight.y - newAnimal.getPosition().y][newAnimal.getPosition().x].getChildren().clear();
+                    guiElements.fillCell(newAnimal.getPosition().x, newAnimal.getPosition().y);
+                    guiElements.gridNodes[upperRight.y - newAnimal.getPosition().y][newAnimal.getPosition().x].getChildren().add(newAnimal.box.vBox);
+                    guiElements.boxNodes.put(new Vector2d(newAnimal.getPosition().x, upperRight.y - newAnimal.getPosition().y), newAnimal.box.vBox);
                 }
             }
         });
